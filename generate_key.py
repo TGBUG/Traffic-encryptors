@@ -4,8 +4,8 @@ import os
 import argparse
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate a shared key for TLS masking proxies')
-    parser.add_argument('--output', '-o', help='Output file (optional)')
+    parser = argparse.ArgumentParser(description='生成加密密钥')
+    parser.add_argument('--output', '-o', help='输出文件 (optional)')
     
     args = parser.parse_args()
     
@@ -25,3 +25,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
