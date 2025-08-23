@@ -17,11 +17,11 @@ def main():
     if args.output:
         with open(args.output, 'w') as f:
             f.write(key_hex)
-        print(f"Key written to {args.output}")
+        print(f"密钥已写入 {args.output}")
     
-    print("\nUsage instructions:")
-    print(f"  1. Start server proxy: python server_proxy.py --key {key_hex} --listen-port 9443")
-    print(f"  2. Start client proxy: python client_proxy.py --server-host <remote_server_ip> --server-port 9443 --local-port 8443 --key {key_hex}")
+    print("\n使用指导:")
+    print(f"  1. 开启代理服务器: python server_proxy.py --key {key_hex} --listen-port 9443")
+    print(f"  2. 开启代理客户端: python client_proxy.py --server-host <remote_server_ip> --server-port 9443 --local-port 8443 --key {key_hex}")
 
 if __name__ == "__main__":
     main()
