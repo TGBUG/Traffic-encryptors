@@ -183,10 +183,10 @@ class ServerProxy:
                 logger.error(f"{direction}: Error forwarding data: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description='TLS Traffic Masking Server Proxy')
-    parser.add_argument('--listen-host', default='0.0.0.0', help='Host to listen on')
-    parser.add_argument('--listen-port', type=int, default=9443, help='Port to listen on')
-    parser.add_argument('--key', required=True, help='Hex-encoded 32-byte key')
+    parser = argparse.ArgumentParser(description='加密代理服务端')
+    parser.add_argument('--listen-host', default='0.0.0.0', help='监听地址')
+    parser.add_argument('--listen-port', type=int, default=9443, help='监听端口')
+    parser.add_argument('--key', required=True, help='加密密钥')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     
     args = parser.parse_args()
@@ -209,3 +209,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
