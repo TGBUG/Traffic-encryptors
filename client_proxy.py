@@ -11,6 +11,8 @@ from Crypto.Cipher import AES
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('ClientProxy')
 
+crypto_key = ''
+
 class ClientProxy:
     def __init__(self, local_host, local_port, server_host, server_port, key):
         self.local_host = local_host
@@ -153,12 +155,12 @@ class ClientProxy:
                 logger.error(f"{direction}: Error processing encrypted data: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description='加密代理客户端')
-    parser.add_argument('--local-host', default='127.0.0.1', help='监听的本地地址')
-    parser.add_argument('--local-port', type=int, default=8443, help='监听的本地端口')
-    parser.add_argument('--server-host', required=True, help='服务器地址')
-    parser.add_argument('--server-port', type=int, default=9443, help='服务器端口)
-    parser.add_argument('--key', default=None, help='加密密钥')
+    parser = argparse.ArgumentParser(description='TLS Traffic Masking Client Proxy')
+    parser.add_argument('--local-host', default='127.0.0.1', help='Local host to listen on')
+    parser.add_argument('--local-port', type=int, default=8443, help='Local port to listen on')
+    parser.add_argument('--server-host', required=True, help='Server proxy host')
+    parser.add_argument('--server-port', type=int, default=9443, help='Server proxy port')
+    parser.add_argument('--key', default=crypto_key, help='Hex-encoded 32-byte key (will generate random if not provided)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     
     args = parser.parse_args()
@@ -185,4 +187,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

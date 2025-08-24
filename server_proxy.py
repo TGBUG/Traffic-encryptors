@@ -11,10 +11,17 @@ from Crypto.Cipher import AES
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('ServerProxy')
 
+crypto_key = ''
+
+server_host = 'www.infcraft.cn'
+server_port = '443'
+
 class ServerProxy:
-    def __init__(self, listen_host, listen_port, key):
+    def __init__(self, listen_host, listen_port, key, server_host, server_port):
         self.listen_host = listen_host
         self.listen_port = listen_port
+        self.server_host = server_host
+        self.server_port = server_port
         self.key = key
         self.connections = []
         self.running = True
@@ -22,7 +29,6 @@ class ServerProxy:
     def start(self):
         """开启代理服务器"""
         try:
-            # Create socket to listen for client proxy connections
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.server_socket.bind((self.listen_host, self.listen_port))
@@ -33,8 +39,7 @@ class ServerProxy:
                 try:
                     client_sock, client_addr = self.server_socket.accept()
                     logger.info(f"New connection from client proxy at {client_addr}")
-                    
-                    # Create new connection handler thread
+
                     client_thread = threading.Thread(
                         target=self.handle_client_proxy_connection,
                         args=(client_sock, client_addr)
@@ -61,7 +66,7 @@ class ServerProxy:
 
     def handle_client_proxy_connection(self, client_sock, client_addr):
         """处理来自客户端代理的连接"""
-        tls_sock = None
+        sock = None
         
         try:
             length_data = client_sock.recv(4)
@@ -79,22 +84,22 @@ class ServerProxy:
             cipher = AES.new(self.key, AES.MODE_GCM, nonce=iv)
             plaintext = cipher.decrypt_and_verify(ciphertext, tag)
             
-            tls_server_host, tls_server_port = self.extract_tls_target(plaintext)
-            logger.info(f"Extracted target: {tls_server_host}:{tls_server_port}")
+            server_host, server_port = self.server_host, self.server_port
+            logger.info(f"Extracted target: {server_host}:{server_port}")
             
-            tls_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            tls_sock.connect((tls_server_host, tls_server_port))
-            logger.info(f"Connected to TLS server at {tls_server_host}:{tls_server_port}")
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((server_host, server_port))
+            logger.info(f"Connected to server at {server_host}:{server_port}")
             
-            tls_sock.sendall(plaintext)
+            sock.sendall(plaintext)
             
             client_to_server = threading.Thread(
                 target=self.forward_data, 
-                args=(client_sock, tls_sock, "client->server")
+                args=(client_sock, sock, "client->server")
             )
             server_to_client = threading.Thread(
                 target=self.backward_data,
-                args=(tls_sock, client_sock, "server->client")
+                args=(sock, client_sock, "server->client")
             )
             
             client_to_server.daemon = True
@@ -109,8 +114,8 @@ class ServerProxy:
         except Exception as e:
             logger.error(f"Error handling client proxy connection: {e}")
         finally:
-            if tls_sock:
-                tls_sock.close()
+            if sock:
+                sock.close()
             if client_sock:
                 client_sock.close()
             logger.info(f"Closed connection from {client_addr}")
@@ -183,10 +188,12 @@ class ServerProxy:
                 logger.error(f"{direction}: Error forwarding data: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description='加密代理服务端')
-    parser.add_argument('--listen-host', default='0.0.0.0', help='监听地址')
-    parser.add_argument('--listen-port', type=int, default=9443, help='监听端口')
-    parser.add_argument('--key', required=True, help='加密密钥')
+    parser = argparse.ArgumentParser(description='Traffic Masking Server Proxy')
+    parser.add_argument('--listen-host', default='0.0.0.0', help='Host to listen on')
+    parser.add_argument('--listen-port', type=int, default=9443, help='Port to listen on')
+    parser.add_argument('--server-host', default=server_host, help='The real server host')
+    parser.add_argument('--server-port', default=server_port, help='The real server port')
+    parser.add_argument('--key', default=crypto_key, help='Hex-encoded 32-byte key')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     
     args = parser.parse_args()
@@ -209,4 +216,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
