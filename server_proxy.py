@@ -14,7 +14,7 @@ logger = logging.getLogger('ServerProxy')
 crypto_key = ''
 
 server_host = 'www.infcraft.cn'
-server_port = '443'
+server_port = 443
 
 class ServerProxy:
     def __init__(self, listen_host, listen_port, key, server_host, server_port):
@@ -84,7 +84,8 @@ class ServerProxy:
             cipher = AES.new(self.key, AES.MODE_GCM, nonce=iv)
             plaintext = cipher.decrypt_and_verify(ciphertext, tag)
             
-            server_host, server_port = self.server_host, self.server_port
+            server_host = self.server_host
+            server_port = self.server_port
             logger.info(f"Extracted target: {server_host}:{server_port}")
             
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -119,10 +120,6 @@ class ServerProxy:
             if client_sock:
                 client_sock.close()
             logger.info(f"Closed connection from {client_addr}")
-
-    def extract_tls_target(self, tls_data):
-        """对这里就是这样，目标地址就设置在这"""
-        return "www.infcraft.cn", 443  # Default target
     
     def recv_exact(self, sock, n):
         """从套接字接收恰好 n 个字节"""
@@ -205,7 +202,7 @@ def main():
     if len(key) != 32:
         parser.error("Key must be 32 bytes (64 hex characters)")
     
-    proxy = ServerProxy(args.listen_host, args.listen_port, key)
+    proxy = ServerProxy(args.listen_host, args.listen_port, key, args.server_host, args.server_port)
     
     try:
         proxy.start()
